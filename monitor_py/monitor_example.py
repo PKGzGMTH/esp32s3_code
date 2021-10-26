@@ -4,7 +4,7 @@ import matplotlib.animation as animation
 
 ser = serial.Serial('COM4', 921600)
 
-w, h = 8, 8
+w, h = 32, 32
 matrix = [[0 for x in range(w)] for y in range(h)]
 
 def generate_data():
@@ -17,7 +17,6 @@ def generate_data():
 				break
 			else:
 				matrix[y][x]=ord(readByte)
-	print('\n'.join([''.join(['{:4}'.format(item) for item in row]) for row in matrix]))
 	return matrix
 
 def update(data):
