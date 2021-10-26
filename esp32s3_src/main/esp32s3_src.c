@@ -23,18 +23,19 @@ void app_main(void)
     pStrip_a->clear(pStrip_a, 50);
     ESP_LOGI(ourTaskName, "Starting UP...\n");
     printf("this is prinf() function!\n\n");
-
+    pStrip_a->set_pixel(pStrip_a, 0, 0, 6, 6);
+    pStrip_a->refresh(pStrip_a, 100);
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    pStrip_a->clear(pStrip_a, 50);
     while (1){
         printf("%c", start);
         pStrip_a->set_pixel(pStrip_a, 0, 0, 6, 0);
         pStrip_a->refresh(pStrip_a, 100);
-        for (int i = 0; i < 32; i++){
-            for (int j = 0; j < 32; j++){
-                int value = (random()%99)+1;
-                printf("%c",value);
-            }
+        for (int j = 0; j < 64; j++){
+            int value = (random()%99)+1;
+            printf("%c",value);
         }
         pStrip_a->clear(pStrip_a, 50);
-        vTaskDelay(400 / portTICK_PERIOD_MS);
+        vTaskDelay(256 / portTICK_PERIOD_MS);
     }
 }
