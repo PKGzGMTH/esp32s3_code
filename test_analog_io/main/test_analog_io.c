@@ -53,19 +53,20 @@ void select_mux(int S0, int S1, int S2, int S3, int EN, int select_channel){
 
 void app_main(void){
     printf("starting up...\n");
-    gpio_reset_pin(9);
+    gpio_reset_pin(4);
     gpio_set_direction(9,GPIO_MODE_OUTPUT);
-    gpio_set_level(9,0);
-    init_mux(13, 12, 11, 10, 14);
+    gpio_set_level(4,0);
+    init_mux(18, 17, 16, 15, 8);
     //gpio_set_level(14,0);
     printf("init complete.\n");
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(4000 / portTICK_PERIOD_MS);
+    while (1){
     for(int i = 0; i<16; i++){
         printf("now set level at pin C%d as high\n",i);
-        select_mux(13, 12, 11, 10, 14, i);
-        gpio_set_level(9,1);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        gpio_set_level(9,0);
-    }
+        select_mux(18, 17, 16, 15, 8, i);
+        gpio_set_level(4,1);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        gpio_set_level(4,0);
+    }}
     printf("Finish Program...\n");
 }
