@@ -6,12 +6,12 @@
 #include "driver/gpio.h"
 #include "led_strip.h"
 
-#define ser 4       // data in
-#define srclk 5     // shift register clock
-#define rclk 6      // latch clock
-#define srclr 7     // shift register reset
+#define ser 42       // data in
+#define srclk 41     // shift register clock
+#define rclk 40      // latch clock
+#define srclr 39     // shift register reset
 
-int ShiftRegisterPin[4] = {4, 5, 6, 7};
+int ShiftRegisterPin[4] = {ser, srclk, rclk, srclr};
 
 void init_sr(int pin[4]){
     gpio_reset_pin(pin[0]);
@@ -31,14 +31,14 @@ void init_sr(int pin[4]){
 
     //reset
     gpio_set_level(pin[3], 0);
-    //enable output
     gpio_set_level(pin[3], 1);
 }
 
 void app_main(void)
 {
+    // init shift register
+    init_sr(ShiftRegisterPin);
     while (1){
-        init_sr(ShiftRegisterPin);
         //send high
         gpio_set_level(ser, 1);
 
@@ -48,7 +48,7 @@ void app_main(void)
 
         //send low
         gpio_set_level(ser, 0);
-        for (int i = 0; i < 8; i++){
+        for (int i = 0; i < 16; i++){
             //start clock output
             gpio_set_level(rclk, 1);
             gpio_set_level(rclk, 0);
@@ -58,8 +58,9 @@ void app_main(void)
             //shift data
             gpio_set_level(srclk, 1);
             gpio_set_level(srclk, 0);
-            vTaskDelay(1000/ portTICK_PERIOD_MS);
         }
+        //reset
+        gpio_set_level(srclr, 0);
+        gpio_set_level(srclr, 1);
     }
-
 }
