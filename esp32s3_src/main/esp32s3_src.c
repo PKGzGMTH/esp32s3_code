@@ -1,7 +1,7 @@
-// H2install library (.h file)  https://vcpkg.io/en/getting-started.html
 // use 921600 byte speed baud rate
 //delay microsecond use
 //ets_delay_us(value)
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "freertos/FreeRTOS.h"
@@ -18,16 +18,64 @@
 #define rclk 40      // latch clock
 #define srclr 39     // shift register reset
 
+#define S0 13
+#define S1 12
+#define S2 11
+#define S3 10
+#define EN 14
+
 static led_strip_t *NeoPixel;
 uint8_t R,G,B;
+
+int channel[16][4] = {
+    {0,0,0,0},
+    {0,0,0,1},
+    {0,0,1,0},
+    {0,0,1,1},
+    {0,1,0,0},
+    {0,1,0,1},
+    {0,1,1,0},
+    {0,1,1,1},
+    {1,0,0,0},
+    {1,0,0,1},
+    {1,0,1,0},
+    {1,0,1,1},
+    {1,1,0,0},
+    {1,1,0,1},
+    {1,1,1,0},
+    {1,1,1,1},
+};
 
 int value, start = 0;
 int *valueADC2 = &value;
 int ShiftRegisterPin[4] = {ser, srclk, rclk, srclr};
-int adc_pin[16] = {4, 5, 6, 7, 15, 16, 17, 18, 8, 1, 2, 9, 10, 11, 12, 13};
+int AnalogMuxPin[5] = {S0, S1, S2, S3, EN};
+int size = 200, startValue = 11;
+char data[32][32];
 
-void init_sr(int pin[4])
-{
+void init_mux(int pin[5]) {
+    gpio_reset_pin(pin[0]);
+    gpio_reset_pin(pin[1]);
+    gpio_reset_pin(pin[2];
+    gpio_reset_pin(pin[3]);
+    gpio_reset_pin(pin[4]);
+    gpio_set_direction(pin[0],GPIO_MODE_OUTPUT);
+    gpio_set_direction(pin[1],GPIO_MODE_OUTPUT);
+    gpio_set_direction(pin[2],GPIO_MODE_OUTPUT);
+    gpio_set_direction(pin[3],GPIO_MODE_OUTPUT);
+    gpio_set_direction(pin[4],GPIO_MODE_OUTPUT);
+    gpio_set_level(pin[4], 1);
+}
+
+void select_mux(int pin[5], int select_channel) {
+    gpio_set_level(pin[4], 0);
+    gpio_set_level(pin[0],channel[select_channel][3]);
+    gpio_set_level(pin[1],channel[select_channel][2]);
+    gpio_set_level(pin[2],channel[select_channel][1]);
+    gpio_set_level(pin[3],channel[select_channel][0]);
+}
+
+void init_sr(int pin[4]) {
     gpio_reset_pin(pin[0]);
     gpio_reset_pin(pin[1]);
     gpio_reset_pin(pin[2]);
@@ -48,57 +96,23 @@ void init_sr(int pin[4])
     gpio_set_level(pin[3], 1);
 }
 
-void readAnalog(void)
-{
-    printf("%c", value = (adc1_get_raw(3) * 254 / 4095) + 1);
-    printf("%c", value = (adc1_get_raw(4) * 254 / 4095) + 1);
-    printf("%c", value = (adc1_get_raw(5) * 254 / 4095) + 1);
-    printf("%c", value = (adc1_get_raw(6) * 254 / 4095) + 1);
+void init_ADC(void) {
+    gpio_reset_pin(4);
+    gpio_reset_pin(5);
+    gpio_set_direction(4, GPIO_MODE_INPUT);
+    gpio_set_direction(5, GPIO_MODE_INPUT);
 
-    adc2_get_raw(4, ADC_WIDTH_BIT_12, valueADC2);
-    printf("%c", (value * 254 / 4095) + 1);
-    adc2_get_raw(5, ADC_WIDTH_BIT_12, valueADC2);
-    printf("%c", (value * 254 / 4095) + 1);
-    adc2_get_raw(6, ADC_WIDTH_BIT_12, valueADC2);
-    printf("%c", (value * 254 / 4095) + 1);
-    adc2_get_raw(7, ADC_WIDTH_BIT_12, valueADC2);
-    printf("%c", (value * 254 / 4095) + 1);
-
-    printf("%c", value = (adc1_get_raw(7) * 254 / 4095) + 1);
-    printf("%c", value = (adc1_get_raw(0) * 254 / 4095) + 1);
-    printf("%c", value = (adc1_get_raw(1) * 254 / 4095) + 1);
-
-    adc2_get_raw(8, ADC_WIDTH_BIT_12, valueADC2);
-    printf("%c", (value * 254 / 4095) + 1);
-    adc2_get_raw(9, ADC_WIDTH_BIT_12, valueADC2);
-    printf("%c", (value * 254 / 4095) + 1);
-    adc2_get_raw(0, ADC_WIDTH_BIT_12, valueADC2);
-    printf("%c", (value * 254 / 4095) + 1);
-    adc2_get_raw(1, ADC_WIDTH_BIT_12, valueADC2);
-    printf("%c", (value * 254 / 4095) + 1);
-    adc2_get_raw(2, ADC_WIDTH_BIT_12, valueADC2);
-    printf("%c", (value * 254 / 4095) + 1);
-}
-
-void init_ADC(int pin[16])
-{
-    for (int i = 0; i < 16; i++){
-        gpio_reset_pin(pin[i]);
-        gpio_pulldown_en(pin[i]);
-    }
-
-    for (int i = 0; i < 10; i++){
-        adc1_config_channel_atten(i, ADC_ATTEN_DB_11);
-        adc2_config_channel_atten(i, ADC_ATTEN_DB_11);
-    }
     adc1_config_width(ADC_WIDTH_BIT_12);
-
+    adc1_config_channel_atten(3, ADC_ATTEN_DB_11);
+    adc1_config_channel_atten(4, ADC_ATTEN_DB_11);
 }
 
-void app_main(void)
-{
+void app_main(void) {
+    //init Analog Mutiplexer
+    init_mux(AnalogMuxPin);
+
     //init Analog to Digital Converter (ADC)
-    init_ADC(adc_pin);
+    init_ADC();
 
     //init shift register
     init_sr(ShiftRegisterPin);
@@ -122,26 +136,43 @@ void app_main(void)
         //send low
         gpio_set_level(ser, 0);
 
-        //send output channel 0 -> 16
-        for (int i = 0; i < 16; i++){
+        //read analog pressure value
+        for (int x = 0; x < 32; x++){
             //start clock output
             gpio_set_level(rclk, 1);
             gpio_set_level(rclk, 0);
             
-            //read analog and send data in string [0-255]
-            readAnalog();
+            //read analog and save in data[32][32] in string [11-200]
+            for (int y = 0; y < 16; y++){
+                select_mux(AnalogMuxPin, y); 
+                data[x][y] = (adc1_get_raw(3) * size / 4095) + startValue);
+                data[x][y+16] = (adc1_get_raw(4) * size / 4095) + startValue);
+            }
 
             //shift data
             gpio_set_level(srclk, 1);
             gpio_set_level(srclk, 0);
-            vTaskDelay(32 / portTICK_PERIOD_MS);
+
+            //delay
+            //vTaskDelay(32 / portTICK_PERIOD_MS);
         }
 
+        //print value
+        for (int y = 0; y < 32; y++) {
+            for (int x = 0; x < 32; x++) {
+                printf("%c", data[x][y]);
+            }
+        }
+
+        //print \n to send all char data
+        printf("\n");
+
+        //clear RGB Neo-pixel
         NeoPixel -> clear(NeoPixel, 50);
+
         //reset
         gpio_set_level(srclr, 0);
         gpio_set_level(srclr, 1);
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-
+        vTaskDelay(360 / portTICK_PERIOD_MS);
     }
 }
