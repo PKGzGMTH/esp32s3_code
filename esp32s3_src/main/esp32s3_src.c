@@ -56,7 +56,7 @@ char data[32][32];
 void init_mux(int pin[5]) {
     gpio_reset_pin(pin[0]);
     gpio_reset_pin(pin[1]);
-    gpio_reset_pin(pin[2];
+    gpio_reset_pin(pin[2]);
     gpio_reset_pin(pin[3]);
     gpio_reset_pin(pin[4]);
     gpio_set_direction(pin[0],GPIO_MODE_OUTPUT);
@@ -137,7 +137,7 @@ void app_main(void) {
         gpio_set_level(ser, 0);
 
         //read analog pressure value
-        for (int x = 0; x < 32; x++){
+        for (int x = 15; x >= 0; x--){
             //start clock output
             gpio_set_level(rclk, 1);
             gpio_set_level(rclk, 0);
@@ -145,8 +145,8 @@ void app_main(void) {
             //read analog and save in data[32][32] in string [11-200]
             for (int y = 0; y < 16; y++){
                 select_mux(AnalogMuxPin, y); 
-                data[x][y] = (adc1_get_raw(3) * size / 4095) + startValue);
-                data[x][y+16] = (adc1_get_raw(4) * size / 4095) + startValue);
+                data[x][y] = ((adc1_get_raw(3) * size / 4095) + startValue);
+                data[x+16][y+16] = ((adc1_get_raw(4) * size / 4095) + startValue);
             }
 
             //shift data
