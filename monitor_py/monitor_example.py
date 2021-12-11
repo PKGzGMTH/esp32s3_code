@@ -1,22 +1,26 @@
-import serial
+import serial, os
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 ser = serial.Serial('COM4', 921600)
-
+z = 0
 w, h = 32,32
 matrix = [[0 for x in range(w)] for y in range(h)]
 
 def generate_data():
 	while not ord(ser.read()) == 0:
 		pass
-	for x in range(h):
-		for y in range(w):
+	for y in range(h):
+		for x in range(w):
 			readByte = ser.read()
 			if ord(readByte)==0:
 				break
 			else:
-				matrix[15-y][x]=ord(readByte)
+				matrix[y][x]=ord(readByte)
+	os.system('cls')
+	print('#'*128)
+	print('\n\n'.join([''.join(['{:4}'.format(item) for item in row]) 
+    for row in matrix]))
 	return matrix
 
 def update(data):
