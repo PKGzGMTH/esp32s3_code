@@ -51,7 +51,7 @@ int *valueADC2 = &value;
 int ShiftRegisterPin[4] = {ser, srclk, rclk, srclr};
 int AnalogMuxPin[5] = {S0, S1, S2, S3, EN};
 int size = 200, startValue = 11;
-char data[32][32];
+uint8_t data[32][32];
 
 void init_mux(int pin[5]) {
     gpio_reset_pin(pin[0]);
@@ -121,7 +121,6 @@ void app_main(void) {
     NeoPixel -> clear(NeoPixel, 50);
     
     while (1){
-        printf("%c", start);
         //set_pixel(NeoPixel, location, R, G, B);
         NeoPixel -> set_pixel(NeoPixel, 0, 0, 4, 1);
         NeoPixel -> refresh(NeoPixel, 100);
@@ -137,25 +136,27 @@ void app_main(void) {
         gpio_set_level(ser, 0);
 
         //read analog pressure value
-        for (int x = 15; x >= 0; x--){
+        for (int x = 0; x < 32; x++){
             //start clock output
             gpio_set_level(rclk, 1);
             gpio_set_level(rclk, 0);
             
             //read analog and save in data[32][32] in string [11-200]
-            for (int y = 0; y < 16; y++){
-                select_mux(AnalogMuxPin, y); 
+            for (int y = 0; y <= 15; y++){
+                select_mux(AnalogMuxPin, y);
                 data[x][y] = ((adc1_get_raw(3) * size / 4095) + startValue);
-                data[x+16][y+16] = ((adc1_get_raw(4) * size / 4095) + startValue);
+                data[x][y+16] = ((adc1_get_raw(4) * size / 4095) + startValue);
+
+                //delay
+                //vTaskDelay(8 / portTICK_PERIOD_MS);
             }
 
             //shift data
             gpio_set_level(srclk, 1);
             gpio_set_level(srclk, 0);
-
-            //delay
-            //vTaskDelay(32 / portTICK_PERIOD_MS);
         }
+        
+        printf("%c", start);
 
         //print value
         for (int y = 0; y < 32; y++) {
@@ -163,8 +164,6 @@ void app_main(void) {
                 printf("%c", data[x][y]);
             }
         }
-
-        //print \n to send all char data
         printf("\n");
 
         //clear RGB Neo-pixel
@@ -173,6 +172,6 @@ void app_main(void) {
         //reset
         gpio_set_level(srclr, 0);
         gpio_set_level(srclr, 1);
-        vTaskDelay(360 / portTICK_PERIOD_MS);
+        vTaskDelay(400 / portTICK_PERIOD_MS);
     }
 }
